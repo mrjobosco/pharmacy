@@ -1,0 +1,187 @@
+<?php
+include_once 'core/init.php';
+
+$errors = [];
+$user = new User();
+if($user->isLoggedIn()){
+	Redirect::to('index.php');
+}
+if(Input::exists()){
+	if(Token::check(Input::get('token')))
+	{
+		$validate = new Validation();
+
+		$validation = $validate->check($_POST,[
+			'username'=>[
+			'required'=> true,
+			'min'	 => 3,
+			'max'	 => 20,
+			'unique' => 'users',
+
+			],
+			'password'=>[
+			'required'=> true,
+			'min'	=> 6,
+			'max'	=> 20,
+
+			],
+			'password_again'=>[
+			'required' => true,
+			'matches' => 'password'
+			],
+			'first_name'=>[
+			'required'	=> true,
+			'min'	=> 3,
+			'max'	=> 20,
+			],
+			'last_name'=>[
+			'required' => true,
+			'min'	=> 3,
+			'max'	=> 20,
+			],
+
+			]);
+		if($validation->passed()){
+			$user = new User();
+
+			$record = $user->activeRecord();
+			try{
+			$record->create([
+				'username' => Input::get('username'),
+				'password' => Input::get('password'),
+				'first_name' => Input::get('first_name'),
+				'last_name' => Input::get('last_name'),
+				'email' 	=> Input::get('email'),
+				'status'	=> 4,
+				
+				]);
+
+		}catch(Exception $e){
+			die($e->getMessage());
+		}
+
+		$new_user = new User(Input::get('username'));
+
+		$new_record = $new_user->activeRecord();
+
+
+		}
+		else{
+			foreach ($validation->errors() as $error) {
+				$errors[] = $error;
+			}
+		}
+	}
+
+
+}
+Html::start('Sign up');
+include_once 'includes/nav.php';
+?>
+<div class="wrapper">
+	<div class="page-wrapper">
+	<div class="container">
+		
+		<div class="row">
+			<?php
+	if(isset($errors))
+	{
+		foreach ($errors as $err) {
+			
+echo '<div class="row"><div class="alert alert-danger">'.$err.'</div></div>';
+		}
+	}
+	?>
+		<div class="col-md-12 col-sm-12 col-xs-12">
+			<div class="row">
+<div class="col-md-6">
+
+			<h2><i class="fa fa-users fa-fw"></i> Register A Patient</h2>
+			
+			<form class="" action="" method="post" role="form">
+				<div id="first" class="form-group">
+					<label class="control-label" for="first_name">
+						First name:
+					</label>
+					<div>
+						<input type="text" required class="form-control" name="first_name" id="first_name">
+					</div>
+					<div style="color:red;" id="first_text"></div>
+				</div>
+				<div id="last" class="form-group">
+					<label class="control-label" for="last_name">
+						Last name:
+					</label>
+					<div class="">
+						<input type="text" required class="form-control" name="last_name" id="last_name">
+					</div>
+					<div style="color:red;" id="last_text"></div>
+				</div>
+				<div class="form-group">
+					<label class="control-label" for="gender">Gender:</label>
+					<div class="">
+						<select class="form-control" name="gender">
+							<option value="female">
+								Female
+							</option>
+							<option value="male">Male</option>
+						</select>
+					</div>
+				</div>
+
+				<div id="user" class="form-group">
+					<label class="control-label" for="username">
+						Username:
+					</label>
+					<div class="">
+						<input type="text" required class="form-control" name="username" id="username">
+					</div>
+					<div style="color:red;" id="username_text"></div>
+				</div>
+				<div id="pass" class="form-group">
+					<label class="control-label" for="password">
+						Password:
+					</label>
+					<div class="">
+						<input type="password" required class="form-control" name="password" id="password">
+					</div>
+					<div style="color:red;" id="password_text"></div>
+				</div>
+				<div id="pass_again" class="form-group">
+					<label class="control-label" for="password_again">
+						Password Again:
+					</label>
+					<div class="">
+						<input type="password" required class="form-control" name="password_again" id="password_again">
+					</div>
+					<div style="color:red;" id="password_again_text"></div>				
+				</div>
+				<div id="mail" class="form-group">
+					<label class="control-label" for="email">
+						Email:
+					</label>
+					<div class="">
+						<input type="email" required class="form-control" name="email" id="email">
+					</div>
+					<div style="color:red;" id="email_text"></div>
+				</div>
+				<input type="hidden" name="token" value="<?= Token::generate();?>">
+				
+				<div class="form-group">
+				<div class="">
+					<input type="submit" id="submit" value="Sign Up" class="btn btn-primary col-md-12">
+					
+				</div>
+				</div>
+			</form>
+		<hr>
+		<p>Already have an account <a href="login.php">Sign in</a>!</p>	
+
+
+		</div>
+	</div>	
+	</div>
+</div>
+<?php
+Html::end();
+?>
